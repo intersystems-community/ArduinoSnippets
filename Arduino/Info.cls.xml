@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="Arduino.Info">
+<Super>%Persistent</Super>
+<TimeCreated>63812,75247.94991</TimeCreated>
+
+<Parameter name="SerialPort">
+<Type>%String</Type>
+<Default>com3</Default>
+</Parameter>
+
+<Property name="DateTime">
+<Type>%DateTime</Type>
+</Property>
+
+<Property name="Temperature">
+<Type>%Double</Type>
+</Property>
+
+<Property name="Humidity">
+<Type>%Double</Type>
+<Parameter name="MAXVAL" value="100"/>
+<Parameter name="MINVAL" value="0"/>
+</Property>
+
+<Property name="Brightness">
+<Type>%Double</Type>
+<Parameter name="MAXVAL" value="100"/>
+<Parameter name="MINVAL" value="0"/>
+</Property>
+
+<Property name="Volume">
+<Type>%Double</Type>
+<Parameter name="MAXVAL" value="100"/>
+<Parameter name="MINVAL" value="0"/>
+</Property>
+
+<Method name="AddNew">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Temperature=0,Humidity=0,Brightness=0,Volume=0</FormalSpec>
+<Implementation><![CDATA[
+	set obj = ..%New()
+	set obj.DateTime=$ZDT($H,3,1)
+	set obj.Temperature=Temperature
+	set obj.Humidity=Humidity
+	set obj.Brightness=Brightness/1023*100
+	set obj.Volume=Volume
+	w $SYSTEM.Status.DisplayError(obj.%Save())
+]]></Implementation>
+</Method>
+
+<Method name="ReceiveSerial">
+<Description><![CDATA[
+Receive one line at a time, using common terminating characters (i.e., CR/LF)
+Infinite loop, terminated by <INTERRUPT> / etc.
+do ##class(Arduino.Info).ReceiveSerial()]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pSerialPort=..#SerialPort</FormalSpec>
+<Implementation><![CDATA[
+	try {
+        //Parameters used to open the serial device:
+        //  portstate = " 0801n0" - by byte position:
+        //      1: space indicates "don't disconnect the port"
+        //      2: 0 indicates "don't use modem control"
+        //      3: 8 indicates 8 data bits
+        //      4: 0 indicates no parity
+        //      5: 1 indicates one stop bit
+        //      6: n indicates that flow control is disabled
+        //      7: 0 indicates disable DTR
+        //  /BAUD=9600 determines the baud rate, of course.
+        open pSerialPort:(:::" 0801n0":/BAUD=9600)
+        set old = $io //Keep track of the original device
+        for {
+            use pSerialPort
+            read x //Read until a termination character is reached
+            if (x '= "") {
+                use old
+                set Humidity = $p($p(x,";",1),"=",2)
+                set Temperature =  $p($p(x,";",2),"=",2)
+                set Brightness =  $p($p(x,";",3),"=",2)
+                do ..AddNew(Temperature,Humidity,Brightness)
+            }
+        }
+    } catch anyError {
+        close pSerialPort
+    }
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^Arduino.InfoD</DataLocation>
+<DefaultData>InfoDefaultData</DefaultData>
+<IdLocation>^Arduino.InfoD</IdLocation>
+<IndexLocation>^Arduino.InfoI</IndexLocation>
+<StreamLocation>^Arduino.InfoS</StreamLocation>
+<Data name="InfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>DateTime</Value>
+</Value>
+<Value name="3">
+<Value>Temperature</Value>
+</Value>
+<Value name="4">
+<Value>Humidity</Value>
+</Value>
+<Value name="5">
+<Value>Brightness</Value>
+</Value>
+<Value name="6">
+<Value>Volume</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+</Export>
