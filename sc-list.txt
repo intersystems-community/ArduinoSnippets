@@ -1,1 +1,11 @@
-Arduino.PKG
+Arduino-Brightness.pivot.dfi
+Arduino-Brightness02.pivot.dfi
+Arduino-BrightnessEd.pivot.dfi
+Arduino-Humidity.pivot.dfi
+Arduino-Humidity02.pivot.dfi
+Arduino-Main.dashboard.dfi
+Arduino-NightMeasures.dashboard.dfi
+Arduino-NightMeasures02.dashboard.dfi
+Arduino-Temperature.pivot.dfi
+Arduino-Temperature02.pivot.dfi
+Arduino.pkg
