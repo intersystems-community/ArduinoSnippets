@@ -8,6 +8,8 @@
 <TimeCreated>63813,37450.240494</TimeCreated>
 <DependsOn>Arduino.Info</DependsOn>
 
+<Parameter name="DOMAIN"/>
+
 <XData name="Cube">
 <Description>
 Cube definition from Architect.</Description>
@@ -24,17 +26,11 @@ Cube definition from Architect.</Description>
       </level>
     </hierarchy>
   </dimension>
-  <measure name="Brightness" disabled="false" sourceProperty="Brightness" aggregate="AVG" type="number" hidden="false" searchable="false">
-  </measure>
-  <measure name="Temperature" disabled="false" sourceProperty="Temperature" aggregate="AVG" type="number" hidden="false" searchable="false">
-  </measure>
-  <measure name="Humidity" displayName="Влажность" disabled="false" sourceProperty="Humidity" aggregate="AVG" type="number" hidden="false" searchable="false">
-  </measure>
+  <measure sourceProperty="Brightness" name="Brightness" displayName="Яркость" disabled="false" aggregate="AVG" type="number" hidden="false" searchable="false" iKnowSource="string"></measure>
+  <measure sourceProperty="Temperature" name="Temperature" displayName="Температура, C" disabled="false" aggregate="AVG" type="number" hidden="false" searchable="false" iKnowSource="string"></measure>
+  <measure sourceProperty="Humidity" name="Humidity" displayName="Влажность, %" disabled="false" aggregate="AVG" type="number" hidden="false" searchable="false" iKnowSource="string"></measure>
 </cube>
 ]]></Data>
 </XData>
-
-<Parameter name="DOMAIN">
-</Parameter>
 </Class>
 </Export>

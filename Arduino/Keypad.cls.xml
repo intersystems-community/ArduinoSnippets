@@ -106,5 +106,64 @@ Infinite loop, terminated by <INTERRUPT> / etc.]]></Description>
     }
 ]]></Implementation>
 </Method>
+
+<Method name="SendSerial1">
+<Description><![CDATA[
+Receive one line at a time, using common terminating characters (i.e., CR/LF)
+Infinite loop, terminated by <INTERRUPT> / etc.
+do ##class(Arduino.Keypad).SendSerial()]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>pSerialPort=..#SerialPort</FormalSpec>
+<Implementation><![CDATA[
+	try {
+        //Parameters used to open the serial device:
+        //  portstate = " 0801n0" - by byte position:
+        //      1: space indicates "don't disconnect the port"
+        //      2: 0 indicates "don't use modem control"
+        //      3: 8 indicates 8 data bits
+        //      4: 0 indicates no parity
+        //      5: 1 indicates one stop bit
+        //      6: n indicates that flow control is disabled
+        //      7: 0 indicates disable DTR
+        //  /BAUD=9600 determines the baud rate, of course.
+        open pSerialPort:(:::" 0801n0":/BAUD=9600)
+        set old = $io //Keep track of the original device
+        //for {
+            use pSerialPort
+            w $c(10)
+            h 1
+            w 1000 _$c(10)
+            use old
+            close pSerialPort
+            /*read x //Read until a termination character is reached
+            if (x '= "") {
+                use old
+                write x,!
+            }*/
+        //}
+    } catch anyError {
+        close pSerialPort
+    }
+]]></Implementation>
+</Method>
+
+<Method name="SendSerial">
+<Description><![CDATA[
+Receive one line at a time, using common terminating characters (i.e., CR/LF)
+Infinite loop, terminated by <INTERRUPT> / etc.
+do ##class(Arduino.Keypad).SendSerial()]]></Description>
+<ClassMethod>1</ClassMethod>
+<Implementation><![CDATA[
+	set port = "COM1"					// Имя порта
+	open port:(:::" 0801n0":/BAUD=9600)	// Открываем устройство
+	set old = $io						// Записываем текущее устройство ввода-вывода
+	use port							// Переключаемся на com порт
+	write $c(10)						// первоначальное установление соединения
+	hang 1	
+	write 1000 _$c(10)					// Передаём строку 1000\n
+	use old								// Переключаем вывод на терминал
+	close port							// Закрываем устройство
+]]></Implementation>
+</Method>
 </Class>
 </Export>

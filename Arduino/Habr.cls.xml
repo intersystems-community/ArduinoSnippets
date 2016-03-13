@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="Arduino.Habr">
+<Super>%Persistent</Super>
+<TimeCreated>63917,55066.276245</TimeCreated>
+
+<Parameter name="SerialPort">
+<Description>
+Порт, к которому подключается Arduino</Description>
+<Type>%String</Type>
+<Default>com5</Default>
+</Parameter>
+
+<Method name="SendSerial">
+<Description>
+Отправляем на порт строку 1000\n</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>port=..#SerialPort</FormalSpec>
+<Implementation><![CDATA[
+	open port:(:::" 0801n0":/BAUD=9600)     // Открываем устройство
+	set old = $IO // Записываем текущее устройство ввода-вывода
+	use port  // Переключаемся на com порт
+	write $c(10) // Отправка пробного пакета данных
+	hang 1
+	write 1000 _$c(10) // Передаём строку 1000\n
+	use old // Переключаем вывод на терминал
+	close port // Закрываем устройство
+]]></Implementation>
+</Method>
+
+<Method name="ReceiveOneLine">
+<Description>
+Поручение одной строки данных (до конца строки)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>port=..#SerialPort</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set str=""
+	try {
+        open port:(:::" 0801n0":/BAUD=9600)
+        set old = $io //Keep track of the original device
+        use port
+        read str //Read until a termination character is reached
+        use old
+        close port
+    } catch ex {
+        close port
+    }
+    return str
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Library.CacheStorage</Type>
+<DataLocation>^Arduino.HabrD</DataLocation>
+<DefaultData>HabrDefaultData</DefaultData>
+<IdLocation>^Arduino.HabrD</IdLocation>
+<IndexLocation>^Arduino.HabrI</IndexLocation>
+<StreamLocation>^Arduino.HabrS</StreamLocation>
+<Data name="HabrDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+</Export>
