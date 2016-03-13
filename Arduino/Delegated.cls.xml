@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="Arduino.Delegated">
+<TimeCreated>63990,61573.422892</TimeCreated>
+
+<Method name="GetKey">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<Implementation><![CDATA[$Get(^Arduino("Key"))
+]]></Implementation>
+</Method>
+
+<Method name="GetIV">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<Implementation><![CDATA[$Get(^Arduino("IV"))
+]]></Implementation>
+</Method>
+
+<Method name="EncryptText">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>PlainText:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set text=$ZConvert(PlainText,"O","UTF8")
+	set text=$System.Encryption.AESCBCEncrypt(text, ..GetKey(), ..GetIV())
+	set ciphertext=$System.Encryption.Base64Encode(text)
+	return ciphertext
+]]></Implementation>
+</Method>
+
+<Method name="DecryptText">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>CipherText:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set text=$SYSTEM.Encryption.Base64Decode(CipherText)
+	set text=$SYSTEM.Encryption.AESCBCDecrypt(text, ..GetKey(), ..GetIV())
+	set plaintext=$ZCONVERT(text,"I","UTF8") 
+	return plaintext
+]]></Implementation>
+</Method>
+</Class>
+</Export>
