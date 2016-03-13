@@ -18,10 +18,13 @@
 </Method>
 
 <Method name="EncryptText">
+<Description>
+w ##class(Arduino.Delegated).EncryptText()</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>PlainText:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
+	
 	set text=$ZConvert(PlainText,"O","UTF8")
 	set text=$System.Encryption.AESCBCEncrypt(text, ..GetKey(), ..GetIV())
 	set ciphertext=$System.Encryption.Base64Encode(text)
