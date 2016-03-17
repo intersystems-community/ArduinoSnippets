@@ -49,42 +49,82 @@ void setup() {
 
 }
 
-void loop()
-{
+void loop() {
+  // put your main code here, to run repeatedly:
   // Receive data from com port
   while (Serial.available() > 0) {
     int inChar = Serial.read();
-    if (isDigit(inChar)) {
-      // Получаем 1 символ,
-      // Прибавляем его к строке
-      inString += (char)inChar;
-    }
 
-    // Доходим до новой строки
-    if (inChar == '\n') {
-      //Serial.println(inString);
-      // inString = "Action@Arg1:Arg2..."
-      String Action = inString.substring(1,3);
-      Serial.println(Action);
-      //byte Action[3],Args[1];
-      //String Arguments = "";
-      //int n = sscanf(inString.c_str(), "%s@%s", Action,Args);
-      if (Action =="Set") {
-        Serial.println("0");
-      } else if (Action =="Get") {
-        Serial.println("1");
+    if (inChar != '\n') {
+      inString += (char)inChar;
+    } else {
+      // New line
+      String Action = inString.substring(0, 3);
+      if (Action == "Set") {
+        SetCard(inString);
+      } else if (Action == "Get") {
+        Serial.println("GetStart");
+        while (!initcard());
+       
+        readBlockToCom(2);
+        Serial.println("GetDone");
       } else {
         Serial.println(Action);
       }
       inString = "";
     }
-    /*while (!initcard());
-
-
-    writeBlock(block, blockcontent);//the blockcontent array is written into the card block
-    readBlockToCom(2);*/
   }
 }
+
+void SetCard(String Data) {
+  Serial.println(Data);
+  // Data Set@user1@user2@pass1@pass2
+  // Set@1234567890123456@1234567890123456@1234567890123456@1234567890123456
+  byte user1[16], user2[16], pass1[16], pass2[16];
+
+  String user1str = inString.substring(4, 20);
+  String user2str = inString.substring(21, 37);
+  String pass1str = inString.substring(38, 54);
+  String pass2str = inString.substring(55, 71);
+
+  Serial.println("Arrays");
+
+  stringToArray(user1str, user1, sizeof(user1));
+  stringToArray(user2str, user2, sizeof(user2));
+  stringToArray(pass1str, pass1, sizeof(pass1));
+  stringToArray(pass2str, pass2, sizeof(pass2));
+
+  writeByteArray(user1, 16);
+  writeByteArray(user2, 16);
+  writeByteArray(pass1, 16);
+  writeByteArray(pass2, 16);
+
+  while (!initcard());
+
+
+  //writeBlock(block, blockcontent);//the blockcontent array is written into the card block
+  //readBlockToCom(2);
+
+}
+
+void stringToArray(String str, byte array[], int arrlength)
+{
+  for (int j = 0 ; j < arrlength ; j++)
+  {
+    array[j] =  str.charAt(j);
+  }
+}
+
+void writeByteArray(byte array[], int arrlength)
+{
+  for (int j = 0 ; j < arrlength ; j++) //print the block contents
+  {
+    Serial.write (array[j]);//Serial.write() transmits the ASCII numbers as human readable characters to serial monitor
+  }
+  Serial.println("");
+}
+
+
 
 bool initcard()
 {
