@@ -41,7 +41,7 @@ void setup() {
   Serial.begin(9600);        // Initialize serial communications with the PC
   SPI.begin();               // Init SPI bus
   mfrc522.PCD_Init();        // Init MFRC522 card (in case you wonder what PCD means: proximity coupling device)
-  Serial.println("Scan a MIFARE Classic card");
+  //Serial.println("Scan a MIFARE Classic card");
 
   // Prepare the security key for the read and write functions - all six key bytes are set to 0xFF at chip delivery from the factory.
   // Since the cards in the kit are new and the keys were never defined, they are 0xFF
@@ -61,10 +61,9 @@ void loop() {
 
     if (inChar != '\n') {
       inString += (char)inChar;
-    } else {
+     } else {
       // New line
       while (!initCard()); // connect to an RFID card
-      
       String Action = inString.substring(0, 3);
       if (Action == "Set") {
         // Write login and pass into the card

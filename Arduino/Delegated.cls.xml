@@ -3,6 +3,11 @@
 <Class name="Arduino.Delegated">
 <TimeCreated>63990,61573.422892</TimeCreated>
 
+<Parameter name="SerialPort">
+<Type>%String</Type>
+<Default>com3</Default>
+</Parameter>
+
 <Method name="GetKey">
 <ClassMethod>1</ClassMethod>
 <CodeMode>expression</CodeMode>
@@ -19,28 +24,159 @@
 
 <Method name="EncryptText">
 <Description>
+Encrypt PlainText with AESCBCEncrypt
 w ##class(Arduino.Delegated).EncryptText()</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>PlainText:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
 	
-	set text=$ZConvert(PlainText,"O","UTF8")
-	set text=$System.Encryption.AESCBCEncrypt(text, ..GetKey(), ..GetIV())
-	set ciphertext=$System.Encryption.Base64Encode(text)
-	return ciphertext
+	Set Text=$ZConvert(PlainText,"O","UTF8")
+	Set Text=$System.Encryption.AESCBCEncrypt(Text, ..GetKey(), ..GetIV())
+	Set Ciphertext=$System.Encryption.Base64Encode(Text)
+	Return Ciphertext
 ]]></Implementation>
 </Method>
 
 <Method name="DecryptText">
+<Description>
+Decrypt PlainText with AESCBCEncrypt</Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>CipherText:%String</FormalSpec>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[
-	set text=$SYSTEM.Encryption.Base64Decode(CipherText)
-	set text=$SYSTEM.Encryption.AESCBCDecrypt(text, ..GetKey(), ..GetIV())
-	set plaintext=$ZCONVERT(text,"I","UTF8") 
-	return plaintext
+	Set Text=$System.Encryption.Base64Decode(CipherText)
+	Set Text=$System.Encryption.AESCBCDecrypt(Text, ..GetKey(), ..GetIV())
+	Set PlainText=$ZConvert(Text,"I","UTF8") 
+	Return PlainText
+]]></Implementation>
+</Method>
+
+<Method name="GetCredentials">
+<Description>
+do ##class(Arduino.Delegated).GetCredentials(.Username, .Password)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*Username:%String,*Password:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Kill Username, Password
+	Set Username = ""
+	Set Password = ""
+	Set Status = $$$OK
+	
+	Set Credentials = ..ExecuteCommand("Get")
+	If (($L(Credentials) =65) && ($L(Credentials,"@") = 2)) {
+		Set CipherUsername = $Piece(Credentials, "@", 1)
+		Set CipherPassword = $Piece(Credentials, "@", 2)
+		Set CipherUsername = $Extract(CipherUsername, 1, 24) // we need only first 24 characters
+		Set CipherPassword = $Extract(CipherPassword, 1, 24)
+		Set Username = ..DecryptText(CipherUsername)
+		Set Password = ..DecryptText(CipherPassword)
+	} Else {
+		Set Status = $$$ERROR($$$GeneralError, "GetCredentials failure, received: " _ Credentials) 
+	}
+	
+	Return Status
+]]></Implementation>
+</Method>
+
+<Method name="SetCredentials">
+<Description>
+do ##class(Arduino.Delegated).SetCredentials("dev",123)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>Username:%String(MAXLEN=15),Password:%String(MAXLEN=15)</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	
+	Set Status = $$$OK
+	
+	Set CipherUsername = ..EncryptText(Username)
+	Set CipherPassword = ..EncryptText(Password)
+	
+	Set User1 = $Extract(CipherUsername, 1, 16)
+	
+	Set User2 = $Extract(CipherUsername, 17, 32)
+	Set User2 = ..AppendToString(User2, , 16)
+	
+	Set Pass1 = $Extract(CipherPassword, 1, 16)
+	
+	Set Pass2 = $Extract(CipherPassword, 17, 32)
+	Set Pass2 = ..AppendToString(Pass2, , 16)
+	
+	Set CommandList = $ListBuild("Set", User1, User2, Pass1, Pass2)
+	Set Command = $ListToString(CommandList, "@")
+
+	Do ..ExecuteCommand(.Command)
+	If (Status = "Done") {
+		Set Status = $$$OK
+	} Else {
+		Set Status = $$$ERROR($$$GeneralError, "SetCredentials failure, received: " _ Status) 
+	}
+	
+	Return Status
+]]></Implementation>
+</Method>
+
+<Method name="ExecuteCommand">
+<Description>
+Send one line at a time, using common terminating characters (i.e., CR) and receive output
+Possible comands:
+Get - reads an RFID card and returns information in a format: user@pass
+Set@user1@user2@pass1@pass2 - sets information on a RFID card 
+in a format: user@pass (where user = user1@user2)
+w ##class(Arduino.Delegated).ExecuteCommand("Get")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&Command:%String,SerialPort=..#SerialPort]]></FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	set x=""
+	try {
+        //Parameters used to open the serial device:
+        //  portstate = " 0801n0" - by byte position:
+        //      1: space indicates "don't disconnect the port"
+        //      2: 0 indicates "don't use modem control"
+        //      3: 8 indicates 8 data bits
+        //      4: 0 indicates no parity
+        //      5: 1 indicates one stop bit
+        //      6: n indicates that flow control is disabled
+        //      7: 0 indicates disable DTR
+        //  /BAUD=9600 determines the baud rate, of course.
+        open SerialPort:(:::" 0801n0":/BAUD=9600)
+        set old = $io //Keep track of the original device
+        use SerialPort
+
+		write $char(10)
+		
+        hang 1
+        
+        write Command _ $Char(10)
+        
+        read x //Read until a termination character is reached
+        use old
+        close SerialPort       
+    } catch ex {
+        close SerialPort
+        //zw ex,x
+        w $System.Status.GetErrorText(ex.AsStatus())
+    }
+    
+    return x
+]]></Implementation>
+</Method>
+
+<Method name="AppendToString">
+<Description>
+Extends right side of a String by Character up to Length chars
+do ##class(Arduino.Delegated).AppendToString("")</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>String:%String,Character:%String(MAXLEN=1)="_",Length:%Integer=$Length(String)</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set Difference = Length - $Length(String)  
+	Return:Difference<=0 String
+	Set Tail = $Justify("", Difference)
+	Set Tail = $Translate(Tail, " ", Character)
+	Return String _ Tail
 ]]></Implementation>
 </Method>
 </Class>
