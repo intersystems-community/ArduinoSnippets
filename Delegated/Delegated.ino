@@ -1,9 +1,8 @@
 
 /******************************************
-  PURPOSE:  Learn to use the MF522-AN RFID card reader with InterSystems Caché
+  Purpose:  Learn to use the MF522-AN RFID card reader with InterSystems Caché
   Created by: Eduard Lebedyuk
-  Based on:    Rudy Schlaf for www.makecourse.com
-  DATE:   3/2016
+  Date:   3/2016
 *******************************************/
 
 /*
@@ -14,6 +13,7 @@
  * Based on code Dr.Leong   ( WWW.B2CQSHOP.COM )
  * Created by Miguel Balboa (circuitito.com), Jan, 2012.
  * Rewritten by Søren Thing Andersen (access.thing.dk), fall of 2013 (Translation to English, refactored, comments, anti collision, cascade levels.)
+ * Updated by Rudy Schlaf for www.makecourse.com
  *
  * This library has been released into the public domain.
 */
