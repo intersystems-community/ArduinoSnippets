@@ -9,8 +9,7 @@ ZAUTHENTICATE(ServiceName,Namespace,Username,Password,Credentials,Properties) PU
 
 GetCredentials(ServiceName,Namespace,Username,Password,Credentials) Public {
 	#Include %occErrors
-	#Include %occStatus
-	
+	#Include %occStatus	
 	Quit ##class(Arduino.Delegated).GetCredentials(.Username, .Password)
  }
 
