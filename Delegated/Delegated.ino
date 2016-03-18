@@ -59,24 +59,34 @@ void loop() {
       inString += (char)inChar;
     } else {
       // New line
+      while (!initcard());
+      
       String Action = inString.substring(0, 3);
       if (Action == "Set") {
-        SetCard(inString);
+        SetUserAndPassToCard(inString);
       } else if (Action == "Get") {
-        Serial.println("GetStart");
-        while (!initcard());
-       
-        readBlockToCom(2);
-        Serial.println("GetDone");
+        ReadUserAndPassToCom();
       } else {
         Serial.println(Action);
       }
+      
+      disconnectCard();
       inString = "";
     }
   }
 }
 
-void SetCard(String Data) {
+void ReadUserAndPassToCom()
+{
+  readBlockToCom(2);
+  readBlockToCom(3);
+  Serial.write("@");
+  readBlockToCom(4);
+  readBlockToCom(5);
+  Serial.println("");
+}
+
+void SetUserAndPassToCard(String Data) {
   Serial.println(Data);
   // Data Set@user1@user2@pass1@pass2
   // Set@1234567890123456@1234567890123456@1234567890123456@1234567890123456
@@ -140,17 +150,23 @@ bool initcard()
   return true;
 }
 
+void disconnectCard()
+{
+  // Halt PICC
+  mfrc522.PICC_HaltA();
+  // Stop encryption on PCD
+  mfrc522.PCD_StopCrypto1();
+}
+
 
 
 void readBlockToCom(int number)
 {
   readBlock(number, readbackblock);//read the block back
-  Serial.print("read block: ");
   for (int j = 0 ; j < 16 ; j++) //print the block contents
   {
     Serial.write (readbackblock[j]);//Serial.write() transmits the ASCII numbers as human readable characters to serial monitor
   }
-  Serial.println("");
 }
 
 
