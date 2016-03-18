@@ -23,6 +23,12 @@
 
 #define SS_PIN 10  //slave select pin
 #define RST_PIN 9  //reset pin
+
+#define u1b 2  //Block on a card for user1 byte array
+#define u2b 4 
+#define p1b 5 
+#define p2b 6 
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);        // instatiate a MFRC522 reader object.
 MFRC522::MIFARE_Key key;//create a MIFARE_Key struct named 'key', which will hold the card information
 
@@ -78,11 +84,11 @@ void loop() {
 
 void ReadUserAndPassToCom()
 {
-  readBlockToCom(2);
-  readBlockToCom(3);
+  readBlockToCom(u1b);
+  readBlockToCom(u2b);
   Serial.write("@");
-  readBlockToCom(4);
-  readBlockToCom(5);
+  readBlockToCom(p1b);
+  readBlockToCom(p2b);
   Serial.println("");
 }
 
@@ -104,15 +110,16 @@ void SetUserAndPassToCard(String Data) {
   stringToArray(pass1str, pass1, sizeof(pass1));
   stringToArray(pass2str, pass2, sizeof(pass2));
 
-  writeByteArray(user1, 16);
+  /*writeByteArray(user1, 16);
   writeByteArray(user2, 16);
   writeByteArray(pass1, 16);
-  writeByteArray(pass2, 16);
-
-  while (!initcard());
+  writeByteArray(pass2, 16);*/
 
 
-  //writeBlock(block, blockcontent);//the blockcontent array is written into the card block
+  writeBlock(u1b, user1); //the blockcontent array is written into the card block
+  writeBlock(u2b, user2);
+  writeBlock(p1b, pass1);
+  writeBlock(p2b, pass2);
   //readBlockToCom(2);
 
 }
