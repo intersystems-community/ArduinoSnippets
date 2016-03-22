@@ -7,7 +7,7 @@ Installation steps:<br>
 1. Connect arduino (and upload C code from Delegated.ino there)<br>
 2. Make this class visible in %SYS namespace (import there or map pckage)<br>
 3. Set SerialPort parameter to a correct value and recompile the class<br>
-4. Run <example>Do ##class(Arduino.Delegated).InitEncryption(key, IV)</example>
+4. Run <example>Do ##class(Arduino.Delegated).InitEncryption(Key, IV)</example>
 5. Write encrypted user credentials to RFID card  with SetCredentials<br>
 6. Import ZAUTHENTICATE into %SYS<br>
 7. Enable Delegated and password auth for relevant services and/or apps]]></Description>
