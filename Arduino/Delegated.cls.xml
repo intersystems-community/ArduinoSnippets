@@ -8,53 +8,48 @@
 <Default>com3</Default>
 </Parameter>
 
-<Method name="GetKey">
+<Method name="SetCredentials">
+<Description><![CDATA[
+Send Arduino the command to set credentials on a card to Username/Password (encrypted)
+<example>do ##class(Arduino.Delegated).SetCredentials("_SYSTEM", "SYS")</example>]]></Description>
 <ClassMethod>1</ClassMethod>
-<CodeMode>expression</CodeMode>
-<Implementation><![CDATA[$Get(^Arduino("Key"))
-]]></Implementation>
-</Method>
-
-<Method name="GetIV">
-<ClassMethod>1</ClassMethod>
-<CodeMode>expression</CodeMode>
-<Implementation><![CDATA[$Get(^Arduino("IV"))
-]]></Implementation>
-</Method>
-
-<Method name="EncryptText">
-<Description>
-Encrypt PlainText with AESCBCEncrypt
-w ##class(Arduino.Delegated).EncryptText()</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>PlainText:%String</FormalSpec>
-<ReturnType>%String</ReturnType>
+<FormalSpec>Username:%String(MAXLEN=15),Password:%String(MAXLEN=15)</FormalSpec>
+<ReturnType>%Status</ReturnType>
 <Implementation><![CDATA[
 	
-	Set Text=$ZConvert(PlainText,"O","UTF8")
-	Set Text=$System.Encryption.AESCBCEncrypt(Text, ..GetKey(), ..GetIV())
-	Set Ciphertext=$System.Encryption.Base64Encode(Text)
-	Return Ciphertext
-]]></Implementation>
-</Method>
+	Set Status = $$$OK
+	
+	Set CipherUsername = ..EncryptText(Username)
+	Set CipherPassword = ..EncryptText(Password)
+	
+	Set User1 = $Extract(CipherUsername, 1, 16)
+	
+	Set User2 = $Extract(CipherUsername, 17, 32)
+	Set User2 = ..AppendToString(User2, , 16)
+	
+	Set Pass1 = $Extract(CipherPassword, 1, 16)
+	
+	Set Pass2 = $Extract(CipherPassword, 17, 32)
+	Set Pass2 = ..AppendToString(Pass2, , 16)
+	
+	Set CommandList = $ListBuild("Set", User1, User2, Pass1, Pass2)
+	Set Command = $ListToString(CommandList, "@")
 
-<Method name="DecryptText">
-<Description>
-Decrypt PlainText with AESCBCEncrypt</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>CipherText:%String</FormalSpec>
-<ReturnType>%String</ReturnType>
-<Implementation><![CDATA[
-	Set Text=$System.Encryption.Base64Decode(CipherText)
-	Set Text=$System.Encryption.AESCBCDecrypt(Text, ..GetKey(), ..GetIV())
-	Set PlainText=$ZConvert(Text,"I","UTF8") 
-	Return PlainText
+	Set Status = ..ExecuteCommand(.Command)
+	If (Status = "Done") {
+		Set Status = $$$OK
+	} Else {
+		Set Status = $$$ERROR($$$GeneralError, "SetCredentials failure, received: " _ Status) 
+	}
+	
+	Return Status
 ]]></Implementation>
 </Method>
 
 <Method name="GetCredentials">
-<Description>
-do ##class(Arduino.Delegated).GetCredentials(.Username, .Password)</Description>
+<Description><![CDATA[
+Connect to an Arduino device, receive credentials, decode them and set to Username/Password variables.
+<example>do ##class(Arduino.Delegated).GetCredentials(.Username, .Password)</example>]]></Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>*Username:%String,*Password:%String</FormalSpec>
 <ReturnType>%Status</ReturnType>
@@ -80,51 +75,15 @@ do ##class(Arduino.Delegated).GetCredentials(.Username, .Password)</Description>
 ]]></Implementation>
 </Method>
 
-<Method name="SetCredentials">
-<Description>
-do ##class(Arduino.Delegated).SetCredentials("dev",123)</Description>
-<ClassMethod>1</ClassMethod>
-<FormalSpec>Username:%String(MAXLEN=15),Password:%String(MAXLEN=15)</FormalSpec>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-	
-	Set Status = $$$OK
-	
-	Set CipherUsername = ..EncryptText(Username)
-	Set CipherPassword = ..EncryptText(Password)
-	
-	Set User1 = $Extract(CipherUsername, 1, 16)
-	
-	Set User2 = $Extract(CipherUsername, 17, 32)
-	Set User2 = ..AppendToString(User2, , 16)
-	
-	Set Pass1 = $Extract(CipherPassword, 1, 16)
-	
-	Set Pass2 = $Extract(CipherPassword, 17, 32)
-	Set Pass2 = ..AppendToString(Pass2, , 16)
-	
-	Set CommandList = $ListBuild("Set", User1, User2, Pass1, Pass2)
-	Set Command = $ListToString(CommandList, "@")
-
-	Do ..ExecuteCommand(.Command)
-	If (Status = "Done") {
-		Set Status = $$$OK
-	} Else {
-		Set Status = $$$ERROR($$$GeneralError, "SetCredentials failure, received: " _ Status) 
-	}
-	
-	Return Status
-]]></Implementation>
-</Method>
-
 <Method name="ExecuteCommand">
-<Description>
+<Description><![CDATA[
 Send one line at a time, using common terminating characters (i.e., CR) and receive output
-Possible comands:
-Get - reads an RFID card and returns information in a format: user@pass
-Set@user1@user2@pass1@pass2 - sets information on a RFID card 
-in a format: user@pass (where user = user1@user2)
-w ##class(Arduino.Delegated).ExecuteCommand("Get")</Description>
+Possible comands:<br>
+<b>Get</b> - reads an RFID card and returns information in a format: user@pass<br>
+<b>Set@user1@user2@pass1@pass2</b> - sets information on a RFID card 
+in a format: user@pass (where user = user1@user2)<br>
+Returns output, produced by Arduino
+<example>w ##class(Arduino.Delegated).ExecuteCommand("Get")</example>]]></Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec><![CDATA[&Command:%String,SerialPort=..#SerialPort]]></FormalSpec>
 <ReturnType>%String</ReturnType>
@@ -156,7 +115,6 @@ w ##class(Arduino.Delegated).ExecuteCommand("Get")</Description>
         close SerialPort       
     } catch ex {
         close SerialPort
-        //zw ex,x
         w $System.Status.GetErrorText(ex.AsStatus())
     }
     
@@ -164,10 +122,59 @@ w ##class(Arduino.Delegated).ExecuteCommand("Get")</Description>
 ]]></Implementation>
 </Method>
 
-<Method name="AppendToString">
+<Method name="GetKey">
 <Description>
+Get key to encode/decode Username/Password</Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<Implementation><![CDATA[$Get(^Arduino("Key"))
+]]></Implementation>
+</Method>
+
+<Method name="GetIV">
+<Description>
+Get IV to encode/decode Username/Password</Description>
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<Implementation><![CDATA[$Get(^Arduino("IV"))
+]]></Implementation>
+</Method>
+
+<Method name="EncryptText">
+<Description><![CDATA[
+Encrypt PlainText with AESCBCEncrypt
+<example>Write ##class(Arduino.Delegated).EncryptText("string")</example>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>PlainText:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	
+	Set Text=$ZConvert(PlainText,"O","UTF8")
+	Set Text=$System.Encryption.AESCBCEncrypt(Text, ..GetKey(), ..GetIV())
+	Set Ciphertext=$System.Encryption.Base64Encode(Text)
+	Return Ciphertext
+]]></Implementation>
+</Method>
+
+<Method name="DecryptText">
+<Description><![CDATA[
+Decrypt PlainText with AESCBCEncrypt
+<example>Write ##class(Arduino.Delegated).DecryptText("sFgKzZVle187N4OqhhcXPw==")</example>]]></Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>CipherText:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	Set Text=$System.Encryption.Base64Decode(CipherText)
+	Set Text=$System.Encryption.AESCBCDecrypt(Text, ..GetKey(), ..GetIV())
+	Set PlainText=$ZConvert(Text,"I","UTF8") 
+	Return PlainText
+]]></Implementation>
+</Method>
+
+<Method name="AppendToString">
+<Description><![CDATA[
 Extends right side of a String by Character up to Length chars
-do ##class(Arduino.Delegated).AppendToString("")</Description>
+<example>Write ##class(Arduino.Delegated).AppendToString("")</example>]]></Description>
 <ClassMethod>1</ClassMethod>
 <FormalSpec>String:%String,Character:%String(MAXLEN=1)="_",Length:%Integer=$Length(String)</FormalSpec>
 <ReturnType>%String</ReturnType>
