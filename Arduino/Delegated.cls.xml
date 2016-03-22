@@ -11,6 +11,7 @@ Installation steps:<br>
 5. Write encrypted user credentials to RFID card  with SetCredentials<br>
 6. Import ZAUTHENTICATE into %SYS<br>
 7. Enable Delegated and password auth for relevant services and/or apps]]></Description>
+<Abstract>1</Abstract>
 <TimeCreated>63990,61573.422892</TimeCreated>
 
 <Parameter name="SerialPort">
