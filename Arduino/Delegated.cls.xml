@@ -124,7 +124,7 @@ Returns output, produced by Arduino
 
 <Method name="GetKey">
 <Description>
-Get key to encode/decode Username/Password</Description>
+Get key to encode/decode via EncryptText/DecryptText</Description>
 <ClassMethod>1</ClassMethod>
 <CodeMode>expression</CodeMode>
 <Implementation><![CDATA[$Get(^Arduino("Key"))
@@ -133,7 +133,7 @@ Get key to encode/decode Username/Password</Description>
 
 <Method name="GetIV">
 <Description>
-Get IV to encode/decode Username/Password</Description>
+Get IV to encode/decode via EncryptText/DecryptText</Description>
 <ClassMethod>1</ClassMethod>
 <CodeMode>expression</CodeMode>
 <Implementation><![CDATA[$Get(^Arduino("IV"))
