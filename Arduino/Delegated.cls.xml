@@ -15,6 +15,8 @@ Installation steps:<br>
 <TimeCreated>63990,61573.422892</TimeCreated>
 
 <Parameter name="SerialPort">
+<Description>
+Name of a serial port to which Arduino is connected</Description>
 <Type>%String</Type>
 <Default>com3</Default>
 </Parameter>
