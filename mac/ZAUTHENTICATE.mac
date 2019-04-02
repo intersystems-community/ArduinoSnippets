@@ -1,0 +1,13 @@
+ROUTINE ZAUTHENTICATE
+ZAUTHENTICATE(ServiceName,Namespace,Username,Password,Credentials,Properties) PUBLIC {
+	#Include %occStatus
+	Write "Logged as " _ $Username 
+	Quit $$$OK
+}
+
+GetCredentials(ServiceName,Namespace,Username,Password,Credentials) Public {
+	#Include %occErrors
+	#Include %occStatus	
+	Quit ##class(Arduino.Delegated).GetCredentials(.Username, .Password)
+ }
+
